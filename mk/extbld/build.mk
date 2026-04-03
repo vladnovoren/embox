@@ -33,7 +33,10 @@ define macro_get
 $(subst $(1),,$(shell echo $(1) | $(EMBOX_GCC) -P -E -))
 endef
 
-PKG_SOURCE_DIR    = $(filter-out %/install,$(wildcard $(MOD_BUILD_DIR)/*))
+export EMBOX_DEPS_CPPFLAGS_BEFORE
+export EMBOX_DEPS_CPPFLAGS_AFTER
+
+PKG_SOURCE_DIR    = $(filter-out %/install %/build,$(wildcard $(MOD_BUILD_DIR)/*))
 PKG_INSTALL_DIR  := $(MOD_BUILD_DIR)/install
 DOWNLOAD_BASEDIR := $(ROOT_DIR)/download
 

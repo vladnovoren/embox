@@ -103,18 +103,29 @@ $(CONFIGURE) :
 			--enable-languages=c,c++ \
 			--enable-threads=posix \
 			--enable-hosted-libstdcxx \
+			--disable-exceptions \
 			$(GCC_CONFIG_OPTSPACE) \
 			--with-gxx-include-dir=$(PKG_INSTALL_DIR)/include \
 			target_configargs="CC=$(EMBOX_GCC) CXX=$(EMBOX_GXX)" \
 			CFLAGS_FOR_TARGET="$(GCC_CPPFLAGS) $(LIBGCC_CPPFLAGS)" \
 			CXXFLAGS_FOR_TARGET="$(GCC_CPPFLAGS) $(LIBSTDCXX_CXXFLAGS)" \
-	)
+			)
+
 	touch $@
 
 $(BUILD) :
 	cd $(GCC_BUILD_DIR) && ( \
 		$(MAKE) MAKEFLAGS='$(EMBOX_IMPORTED_MAKEFLAGS)' \
 			GCC_FOR_TARGET=$(EMBOX_GCC) \
+			AR_FOR_TARGET=/usr/bin/ar \
+			AS_FOR_TARGET=/usr/bin/as \
+			NM_FOR_TARGET=/usr/bin/nm \
+			RANLIB_FOR_TARGET=/usr/bin/ranlib \
+			LD_FOR_TARGET=/usr/bin/ld \
+			STRIP_FOR_TARGET=/usr/bin/strip \
+			OBJCOPY_FOR_TARGET=/usr/bin/objcopy \
+			OBJDUMP_FOR_TARGET=/usr/bin/objdump \
+			READELF_FOR_TARGET=/usr/bin/readelf \
 			TARGET-libiberty="LINKER=true CC=true AR=true RANLIB=touch all" \
 			TARGET-zlib="LINKER=true CC=true AR=true RANLIB=touch all" \
 			TARGET-libbacktrace="LINKER=true CC=true AR=touch \
@@ -135,12 +146,15 @@ $(BUILD) :
 
 $(INSTALL) :
 	cd $(GCC_BUILD_DIR) && ( \
-		$(MAKE) install-target-libgcc; \
-		$(MAKE) install-target-libstdc++-v3; \
+		$(MAKE) install-target-libgcc \
+			RANLIB_FOR_TARGET=/usr/bin/ranlib; \
+		$(MAKE) install-target-libstdc++-v3 \
+			RANLIB_FOR_TARGET=/usr/bin/ranlib; \
 	)
 	$(CP) $(PKG_INSTALL_DIR)/lib/gcc/$(GCC_TARGET)/$(PKG_VER)/libgcc.a $(PKG_INSTALL_DIR)/lib
 	$(CP) $(PKG_INSTALL_DIR)/$(GCC_TARGET)/lib/libstdc++.a $(PKG_INSTALL_DIR)/lib
 	$(CP) $(PKG_INSTALL_DIR)/$(GCC_TARGET)/lib/libsupc++.a $(PKG_INSTALL_DIR)/lib
 	$(CP) $(PKG_INSTALL_DIR)/include/$(GCC_TARGET)/bits/* $(PKG_INSTALL_DIR)/include/bits
 	$(CP) $(PKG_INSTALL_DIR)/include/$(GCC_TARGET)/ext/* $(PKG_INSTALL_DIR)/include/ext
+	$(CP) $(GCC_BUILD_DIR)/gcc/include/*.h $(PKG_INSTALL_DIR)/include
 	touch $@
